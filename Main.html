@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<HTML>
+  <HEAD>
+    <TITLE>
+      Snake
+    </TITLE>
+
+    <STYLE>
+      CANVAS{
+        background-color: gray;
+      }
+    </STYLE>
+    <SCRIPT src = "Cell.js"></SCRIPT>
+	<SCRIPT src = "Snake.js"></SCRIPT>
+	<SCRIPT src = "PowerUp.js"></SCRIPT>
+	<SCRIPT src = "GameLoop.js"></SCRIPT>
+	<SCRIPT src = "ClearScreen.js"></SCRIPT>
+	<SCRIPT src = "RandomNumberGenerator.js"></SCRIPT>
+	<SCRIPT src = "FrameCounter.js"></SCRIPT>
+	<SCRIPT src = "EventListener.js"></SCRIPT>
+	<SCRIPT src = "CollisionDetection.js"></SCRIPT>
+	<SCRIPT src = "Text.js"></SCRIPT>
+ 	<SCRIPT src = "Line.js"></SCRIPT>
+   	<SCRIPT src = "GamePlayFunctions.js"></SCRIPT>
+   	<SCRIPT src = "Button.js"></SCRIPT>
+	<SCRIPT src = "StrokeCell.js"></SCRIPT>
+	<SCRIPT src = "UIFunctions.js"></SCRIPT>
+  </HEAD>
+
+  <BODY>
+    <CANVAS id = "MyCanvas" width = "600px" height = "600px"></CANVAS>
+
+    <SCRIPT>
+      var g_FPS = 30;
+      var g_SetInterval = 1000 / g_FPS;
+
+      var g_Canvas = document.getElementById("MyCanvas");
+      var g_Ctx = g_Canvas.getContext("2d");
+      var g_CanvasWidth = g_Canvas.width;
+      var g_CanvasHeight = g_Canvas.height;
+	
+		
+	  // 3 states || 1 >> Starting || 2 >> Running || 3 >> Ended
+	  var g_GameState = "Starting" ;
+	  // Starting Text || Main Menu
+	  var g_HeadingFontSize = "32px" ;
+	  var g_SubHeadingSize = "24px" ;
+	  var g_TextFontSize = "20px" ;
+		
+	  var g_StartText = new C_Text ( 210, 60, "Black", "Snake", g_HeadingFontSize ) ;
+	  var g_StartButton = new C_Button ( "Start", 220, 200, 100, 50, "DarkGreen", "Black", g_SubHeadingSize	
+) ;
+	  var g_HelpButton = new C_Button ( "Help", 220, 300, 100, 50, "DarkGreen", "Black" , g_SubHeadingSize ) ;
+		
+	  // Help Menu
+	  var g_HelpText = new C_Text ( 230, 60, "Black", "Help", g_HeadingFontSize ) ;
+	  var g_ControlButton = new C_Button ( "Control", 210, 200, 130, 50, "DarkGreen", "Black", g_SubHeadingSize ) ;
+	  var g_InstructionsButton = new C_Button ( "Instructions", 190, 300, 180, 50, "DarkGreen", "Black", g_SubHeadingSize ) ;
+	  var g_BackButton = new C_Button ( "Back", 220, 400, 100, 50, "DarkGreen", "Black", g_SubHeadingSize ) ;
+		
+	  // Instruction Menu
+	  var g_InstructionText = new C_Text ( 190, 60, "Black", "Instruction", g_HeadingFontSize ) ;
+	  var g_InstructionSubHeading = new C_Text ( 190, 100, "Blue", "How To Play ?", g_SubHeadingSize ) ;
+	  var g_LineOne = new C_Text ( 110, 210, "Black", "This is the implementation of snake game ", g_TextFontSize )  ;
+	  var g_LineTwo = new C_Text ( 80, 230, "Black", "The player who will collect 10 points first will win", g_TextFontSize )  ;
+	  var g_LineThree = new C_Text ( 120, 250, "Black", "If Snake collide with the wall it will die", g_TextFontSize ) ;
+	  var g_LineFour = new C_Text ( 110, 270, "Black", "If Snake collides with each other it will die", g_TextFontSize ) ;
+	  var g_LineFive = new C_Text ( 110, 290, "Black", "If snake collides with himself he will die", g_TextFontSize ) ;
+	  var g_InstructioinsSquare = new C_StrokeCell ( 70, 160, 480, 170, 4, "White") ;
+		
+	  // Control Menu
+	  var g_ControlText = new C_Text ( 220, 60, "Black", "Control", g_HeadingFontSize ) ;
+	  var g_ControlSquare = new C_StrokeCell ( 85, 90, 450, 220, 4, "White", g_TextFontSize ) ;
+	  var g_ControlLineOne = new C_Text ( 90, 160, "Red", "Red Snake Controls", g_TextFontSize ) ;
+	  var g_ControlLineTwo = new C_Text ( 110, 180, "Red", "Left ->> A", g_TextFontSize ) ;
+	  var g_ControlLineThree = new C_Text ( 110, 200, "Red", "Up ->> W", g_TextFontSize ) ;
+	  var g_ControlLineFour = new C_Text ( 110, 220, "Red", "Right ->> D", g_TextFontSize ) ;
+	  var g_ControlLineFive = new C_Text ( 110, 240, "Red", "Down ->> S", g_TextFontSize) ;
+	  var g_ControlLineSix = new C_Text ( 310, 160, "Blue", "Blue Snake Controls", g_TextFontSize ) ;
+	  var g_ControlLineSeven = new C_Text ( 310, 180, "Blue", "Left ->> LeftArrow", g_TextFontSize ) ;
+	  var g_ControlLineEight = new C_Text ( 310, 200, "Blue", "Up ->> UpArrow", g_TextFontSize ) ;
+	  var g_ControlLineNine = new C_Text ( 310, 220, "Blue", "Right ->> RightArrow", g_TextFontSize ) ;
+	  var g_ControlLineTen = new C_Text ( 310, 240, "Blue", "Down ->> DownArrow", g_TextFontSize ) ;
+		
+	  // Winner Text
+	  var g_WinnerMessageText = new C_Text ( 160, 200, "Black", " Won ", g_HeadingFontSize ) ;
+	  var g_RestartButton = new C_Button ( "Restart", 220, 400, 130, 50, "DarkGreen", "Black", g_SubHeadingSize ) ;
+		
+	  // GamePlay
+	  // Snakes GameObjects
+	  // Red
+	  var g_PointsToWin = 10 ;
+	  var g_RedSnakeStartPosX = 60 ;
+	  var g_RedSnakeStartPosY = 80 ;
+	  var g_RedSnakeColor = "DarkRed" ;
+	  var g_SnakeNodeSize = 10 ;
+	  var g_SnakeLength = 5 ;
+	  var g_SnakeSpeed = 10 ;
+	  var g_MinBoundryX = 50 ;
+	  var g_MaxBoundryX = 600 ;
+	  var g_MinBoundryY = 0 ;
+	  var g_RedSnake = new C_Snake ( g_RedSnakeStartPosX, g_RedSnakeStartPosY, g_RedSnakeColor, g_SnakeNodeSize, g_SnakeLength, g_SnakeSpeed, g_MinBoundryX, g_MaxBoundryX, g_MinBoundryY, g_MaxBoundryX ) ;
+	  g_RedSnake.M_InitialiseSnake () ;
+		
+	  // Blue
+	  var g_BlueSnakeStartPosX = 440 ;
+	  var g_BlueSnakeStartPosY = 200 ;
+	  var g_BlueSnakeColor = "DarkBlue" ;
+	  var g_BlueSnake = new C_Snake ( g_BlueSnakeStartPosX, g_BlueSnakeStartPosY, g_BlueSnakeColor, g_SnakeNodeSize, g_SnakeLength, g_SnakeSpeed, g_MinBoundryX, g_MaxBoundryX, g_MinBoundryY, g_MaxBoundryX ) ;
+	  g_BlueSnake.M_InitialiseSnake () ;
+
+	  // powerup game object
+	  var g_MinBoundryPowerUpForX = 10 ;
+	  var g_MaxBoundryPowerUpForX = 590 ;
+	  var g_MinBoundryPowerUpForY = 60 ;
+	  var g_MaxBoundryPowerUpForY = 590 ;
+	  var g_PowerUp = new C_PowerUp ( 300, 300, "Black", 10, g_MinBoundryPowerUpForX, g_MaxBoundryPowerUpForX, g_MinBoundryPowerUpForY, g_MaxBoundryPowerUpForY);
+		
+	  var g_Winner = "Red Snake";
+	  var g_PointsToWin = 10 ;
+	  // Events
+      g_Canvas.addEventListener( "contextmenu", e => e.preventDefault() );
+	  document.addEventListener("keydown", E_KeyDown);
+	  document.addEventListener("keyup", E_KeyUp);
+	  g_Canvas.addEventListener("click", E_OnClick ) ;
+	  
+	  var g_RedSnakeTextPosX = 5 ; 
+	  var g_RedSnakeTextPosY = 25 ; 
+	  var g_RedSnakeText = new C_Text( g_RedSnakeTextPosX, g_RedSnakeTextPosY, "Red", "Red Snake", "20px"); 
+		
+	  var g_RedSnakeScorePosX = 25 ; 
+	  var g_RedSnakeScorePosY = 45 ; 
+	  var g_RedSnakeScore = new C_Text( g_RedSnakeScorePosX, g_RedSnakeScorePosY, "Red", g_RedSnake.Points, "20px"); 
+		
+	  var g_BlueSnakeTextPosX = 480 ; 
+	  var g_BlueSnakeTextPosY = 25 ; 
+	  var g_BlueSnakeText = new C_Text( g_BlueSnakeTextPosX, g_BlueSnakeTextPosY, "Blue", "Blue Snake", "20px"); 
+		
+	  var g_BlueSnakeScorePosX = 525 ; 
+	  var g_BlueSnakeScorePosY = 45 ; 
+	  var g_BlueSnakeScore = new C_Text( g_BlueSnakeScorePosX, g_BlueSnakeScorePosY, "Blue", g_BlueSnake.Points, "20px" ); 
+		
+	  f_ActivateStartMenu () ;
+	  f_DeactivateControl() ;
+	  f_DeactivateHelpMenu () ;
+	  f_DeactivateInstructionsMenu () ;
+	  f_DeactivateScoreText () ;
+	  f_DeactivateWinnerMenu () ;
+		
+	  // GamePlay Loop
+      var g_SetIntervalId = setInterval( F_GameLoop, g_SetInterval );
+    </SCRIPT>
+  </BODY>
+</HTML>
